@@ -1,5 +1,7 @@
 # File Writer
 
+Works in **Deno**.
+
 This module exports two functions: `appendText` and `writeText`.
 
 The purpose of this functions is to work asynchronously without
