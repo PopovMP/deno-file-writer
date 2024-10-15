@@ -1,5 +1,5 @@
 // Copyright 2024 Forex Software Ltd. All rights reserved. MIT license.
-// This module is not browser compatible.
+// This module works in Deno and NodeJS.
 
 /**
  * This module exports two functions: `appendText` and `writeText`.
@@ -12,7 +12,7 @@
  * operation.
  *
  * ```ts
- * import { appendText } from "@popov/file_writer";
+ * import { appendText } from "@popov/file-writer";
  *
  * appendText("log.txt", "foo\n");
  * appendText("log.txt", "bar\n");
@@ -23,7 +23,7 @@
  * ```
  *
  * ```ts
- * import { writeText } from "@popov/file_writer";
+ * import { writeText } from "@popov/file-writer";
  *
  * writeText("log.txt", "foo\n");
  * writeText("log.txt", "bar\n");

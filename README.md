@@ -15,7 +15,7 @@ finished, the functions cache the data and reschedule the operation.
 ### Append text asynchronously
 
 ```ts
-import { appendText } from "@popov/file_writer";
+import { appendText } from "@popov/file-writer";
 
 appendText("log.txt", "foo\n");
 appendText("log.txt", "bar\n");
@@ -28,7 +28,7 @@ appendText("log.txt", "bar\n");
 ### Write text asynchronously
 
 ```ts
-import { writeText } from "@popov/file_writer";
+import { writeText } from "@popov/file-writer";
 
 writeText("log.txt", "foo\n");
 writeText("log.txt", "bar\n");
