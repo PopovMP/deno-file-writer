@@ -1,9 +1,9 @@
 import { appendFile, writeFile } from "node:fs";
 
 interface QueueJob {
-  timeoutID: number;
+  timeoutId: number;
   filepath: string;
-  content: string;
+  content: string[];
   isAppend: boolean;
 }
 
@@ -19,22 +19,22 @@ const TIMEOUT_INTERVAL: number = 100;
 const queue: Record<string, QueueJob> = {};
 const busy: Record<string, boolean> = {};
 
-export type WriterFunction = (
+export type WriteFunction = (
   path: string,
   data: string,
   option: { encoding: "utf8" },
   callback: (err: Error | null) => void,
 ) => void;
 
-let appendTextFile: WriterFunction = appendFile;
-let writeTextFile: WriterFunction = writeFile;
+let appendTextFile: WriteFunction = appendFile;
+let writeTextFile: WriteFunction = writeFile;
 
 /**
  * Overide the default write functions for testing purposes.
  */
 export function setWriteFunctions(
-  appender: WriterFunction,
-  writer: WriterFunction,
+  appender: WriteFunction,
+  writer: WriteFunction,
 ): void {
   appendTextFile = appender;
   writeTextFile = writer;
@@ -88,26 +88,31 @@ function doAction(
     const prevQueueJob: QueueJob | undefined = queue[filepath];
 
     // Clear previously scheduled timeout job
-    if (prevQueueJob && prevQueueJob.timeoutID) {
-      clearTimeout(prevQueueJob.timeoutID || 0);
+    if (prevQueueJob && prevQueueJob.timeoutId) {
+      clearTimeout(prevQueueJob.timeoutId || 0);
     }
 
     // Schedule a new write operation
-    const timeoutID: number = setTimeout(
+    const timeoutId: number = setTimeout(
       repeatWriteFile,
       TIMEOUT_INTERVAL,
       filepath,
     );
 
     if (prevQueueJob) {
-      prevQueueJob.timeoutID = timeoutID;
+      prevQueueJob.timeoutId = timeoutId;
       if (isAppend) {
-        prevQueueJob.content += content;
+        prevQueueJob.content.push(content);
       } else {
-        prevQueueJob.content = content;
+        prevQueueJob.content[0] = content;
       }
     } else {
-      queue[filepath] = { timeoutID, filepath, content, isAppend };
+      queue[filepath] = {
+        timeoutId,
+        filepath,
+        isAppend,
+        content: [content],
+      };
     }
 
     return;
@@ -127,7 +132,11 @@ function doAction(
     const job: QueueJob = queue[filePath];
     delete queue[filePath];
 
-    doAction(action, job.filepath, job.content, job.isAppend);
+    const content: string = job.content.length > 1
+      ? job.content.join("")
+      : job.content[0];
+
+    doAction(action, job.filepath, content, job.isAppend);
   }
 }
 
