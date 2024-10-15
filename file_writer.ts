@@ -1,5 +1,12 @@
 import { appendFile, writeFile } from "node:fs";
 
+export type WriteFunction = (
+  path: string,
+  data: string,
+  option: { encoding: "utf8" },
+  callback: (err: Error | null) => void,
+) => void;
+
 interface QueueJob {
   timeoutId: number;
   filepath: string;
@@ -7,24 +14,10 @@ interface QueueJob {
   isAppend: boolean;
 }
 
-type WriteAction = (
-  filepath: string,
-  content: string,
-  isAppend: boolean,
-  callback: (err: Error | null) => void,
-) => void;
-
 const TIMEOUT_INTERVAL: number = 100;
 
 const queue: Record<string, QueueJob> = {};
 const busy: Record<string, boolean> = {};
-
-export type WriteFunction = (
-  path: string,
-  data: string,
-  option: { encoding: "utf8" },
-  callback: (err: Error | null) => void,
-) => void;
 
 let appendTextFile: WriteFunction = appendFile;
 let writeTextFile: WriteFunction = writeFile;
@@ -52,7 +45,7 @@ export function setWriteFunctions(
  * Throws an error if the write operation fails.
  */
 export function appendText(filepath: string, content: string): void {
-  doAction(doWriteFile, filepath, content, true);
+  doAction(appendTextFile, filepath, content, true);
 }
 
 /**
@@ -67,7 +60,7 @@ export function appendText(filepath: string, content: string): void {
  * Throws an error if the write operation fails.
  */
 export function writeText(filepath: string, content: string): void {
-  doAction(doWriteFile, filepath, content, false);
+  doAction(writeTextFile, filepath, content, false);
 }
 
 /**
@@ -78,7 +71,7 @@ export function writeText(filepath: string, content: string): void {
  * if it is requested before the previous one has finished.
  */
 function doAction(
-  action: WriteAction,
+  action: WriteFunction,
   filepath: string,
   content: string,
   isAppend: boolean,
@@ -89,15 +82,11 @@ function doAction(
 
     // Clear previously scheduled timeout job
     if (prevQueueJob && prevQueueJob.timeoutId) {
-      clearTimeout(prevQueueJob.timeoutId || 0);
+      clearTimeout(prevQueueJob.timeoutId);
     }
 
     // Schedule a new write operation
-    const timeoutId: number = setTimeout(
-      repeatWriteFile,
-      TIMEOUT_INTERVAL,
-      filepath,
-    );
+    const timeoutId = setTimeout(repeatAction, TIMEOUT_INTERVAL, filepath);
 
     if (prevQueueJob) {
       prevQueueJob.timeoutId = timeoutId;
@@ -118,17 +107,15 @@ function doAction(
     return;
   }
 
-  // Mark filePath busy
   busy[filepath] = true;
 
   // Start write operation
-  action(filepath, content, isAppend, (err: Error | null): void => {
-    // Release busy
+  action(filepath, content, { encoding: "utf8" }, (err: Error | null): void => {
     delete busy[filepath];
     if (err) throw err;
   });
 
-  function repeatWriteFile(filePath: string): void {
+  function repeatAction(filePath: string): void {
     const job: QueueJob = queue[filePath];
     delete queue[filePath];
 
@@ -137,22 +124,5 @@ function doAction(
       : job.content[0];
 
     doAction(action, job.filepath, content, job.isAppend);
-  }
-}
-
-/**
- * Executes the actual write operation asynchronously.
- * Calls the callback function when the write is ready.
- */
-function doWriteFile(
-  filepath: string,
-  content: string,
-  isAppend: boolean,
-  callback: (err: Error | null) => void,
-): void {
-  if (isAppend) {
-    appendTextFile(filepath, content, { encoding: "utf8" }, callback);
-  } else {
-    writeTextFile(filepath, content, { encoding: "utf8" }, callback);
   }
 }
