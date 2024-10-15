@@ -1,6 +1,6 @@
 # File Writer
 
-Works in **Deno**.
+Works in **Deno** and **NodeJS**.
 
 This module exports two functions: `appendText` and `writeText`.
 
