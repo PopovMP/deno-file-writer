@@ -1,10 +1,10 @@
 import { assertEquals } from "jsr:@std/assert";
-import { appendText, setWriterFunction, writeText } from "./file_writer.ts";
+import { appendText, setWriteFunctions, writeText } from "./file_writer.ts";
 
 const logBuffer: string[] = [];
 let logCount = 0;
 
-setWriterFunction(logText);
+setWriteFunctions(appendTextMoq, writeTextMoq);
 
 Deno.test("writeAndForget() writes correctly", async (): Promise<void> => {
   const filepath = "test.txt";
@@ -17,7 +17,7 @@ Deno.test("writeAndForget() writes correctly", async (): Promise<void> => {
   writeText(filepath, "4\n");
   writeText(filepath, "5\n");
 
-  await delay(250);
+  await delay(150);
   assertEquals(logBuffer[0], "5\n");
   assertEquals(logCount, 2);
 });
@@ -33,28 +33,40 @@ Deno.test("appendAndForget() appends correctly", async (): Promise<void> => {
   appendText(filepath, "4\n");
   appendText(filepath, "5\n");
 
-  await delay(250);
+  await delay(150);
   assertEquals(logBuffer[0], "1\n");
   assertEquals(logBuffer[1], "2\n3\n4\n5\n");
   assertEquals(logCount, 2);
 });
 
-async function logText(
+function appendTextMoq(
   filepath: string,
   content: string,
-  options: { append?: boolean },
-): Promise<void> {
+  options: { encoding: "utf8" },
+  callback: (err: Error | null) => void,
+): void {
   void filepath;
+  void options;
 
-  if (options.append) {
-    logBuffer.push(content);
-  } else {
-    logBuffer[0] = content;
-  }
-
+  logBuffer.push(content);
   logCount++;
 
-  return await delay(100);
+  setTimeout(callback, 10, null);
+}
+
+function writeTextMoq(
+  filepath: string,
+  content: string,
+  options: { encoding: "utf8" },
+  callback: (err: Error | null) => void,
+): void {
+  void filepath;
+  void options;
+
+  logBuffer[0] = content;
+  logCount++;
+
+  setTimeout(callback, 10, null);
 }
 
 function delay(delayInMillis: number): Promise<void> {

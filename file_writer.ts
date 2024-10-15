@@ -1,3 +1,5 @@
+import { appendFile, writeFile } from "node:fs";
+
 interface QueueJob {
   timeoutID: number;
   filepath: string;
@@ -20,16 +22,21 @@ const busy: Record<string, boolean> = {};
 export type WriterFunction = (
   path: string,
   data: string,
-  option: { append?: boolean },
-) => Promise<void>;
+  option: { encoding: "utf8" },
+  callback: (err: Error | null) => void,
+) => void;
 
-let writeTextFile: WriterFunction = Deno.writeTextFile;
+let appendTextFile: WriterFunction = appendFile;
+let writeTextFile: WriterFunction = writeFile;
 
 /**
- * Sets a custom function to write text to a file.
- * By default, it uses Deno.writeTextFile.
+ * Overide the default write functions for testing purposes.
  */
-export function setWriterFunction(writer: WriterFunction): void {
+export function setWriteFunctions(
+  appender: WriterFunction,
+  writer: WriterFunction,
+): void {
+  appendTextFile = appender;
   writeTextFile = writer;
 }
 
@@ -45,7 +52,7 @@ export function setWriterFunction(writer: WriterFunction): void {
  * Throws an error if the write operation fails.
  */
 export function appendText(filepath: string, content: string): void {
-  doAction(writeFile, filepath, content, true);
+  doAction(doWriteFile, filepath, content, true);
 }
 
 /**
@@ -60,7 +67,7 @@ export function appendText(filepath: string, content: string): void {
  * Throws an error if the write operation fails.
  */
 export function writeText(filepath: string, content: string): void {
-  doAction(writeFile, filepath, content, false);
+  doAction(doWriteFile, filepath, content, false);
 }
 
 /**
@@ -128,19 +135,15 @@ function doAction(
  * Executes the actual write operation asynchronously.
  * Calls the callback function when the write is ready.
  */
-function writeFile(
+function doWriteFile(
   filepath: string,
   content: string,
   isAppend: boolean,
   callback: (err: Error | null) => void,
 ): void {
-  (async (): Promise<void> => {
-    try {
-      await writeTextFile(filepath, content, { append: isAppend });
-    } catch (err) {
-      callback(err as Error);
-      return;
-    }
-    callback(null);
-  })();
+  if (isAppend) {
+    appendTextFile(filepath, content, { encoding: "utf8" }, callback);
+  } else {
+    writeTextFile(filepath, content, { encoding: "utf8" }, callback);
+  }
 }
