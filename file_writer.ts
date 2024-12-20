@@ -23,7 +23,7 @@ let appendTextFile: WriteFunction = appendFile;
 let writeTextFile: WriteFunction = writeFile;
 
 /**
- * Overide the default write functions for testing purposes.
+ * Override the default write functions for testing purposes.
  */
 export function setWriteFunctions(
   appender: WriteFunction,
@@ -112,7 +112,9 @@ function doAction(
   // Start write operation
   action(filepath, content, { encoding: "utf8" }, (err: Error | null): void => {
     delete busy[filepath];
-    if (err) throw err;
+    if (err) {
+      throw err;
+    }
   });
 
   function repeatAction(filePath: string): void {

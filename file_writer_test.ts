@@ -1,4 +1,5 @@
-import { assertEquals } from "jsr:@std/assert";
+import { strictEqual } from "node:assert";
+import { test } from "node:test";
 import { appendText, setWriteFunctions, writeText } from "./file_writer.ts";
 
 const logBuffer: string[] = [];
@@ -6,7 +7,7 @@ let logCount = 0;
 
 setWriteFunctions(appendTextMoq, writeTextMoq);
 
-Deno.test("writeAndForget() writes correctly", async (): Promise<void> => {
+test("writeAndForget() writes correctly", async (): Promise<void> => {
   const filepath = "test.txt";
   logBuffer.length = 0;
   logCount = 0;
@@ -18,11 +19,11 @@ Deno.test("writeAndForget() writes correctly", async (): Promise<void> => {
   writeText(filepath, "5\n");
 
   await delay(150);
-  assertEquals(logBuffer[0], "5\n");
-  assertEquals(logCount, 2);
+  strictEqual(logBuffer[0], "5\n");
+  strictEqual(logCount, 2);
 });
 
-Deno.test("appendAndForget() appends correctly", async (): Promise<void> => {
+test("appendAndForget() appends correctly", async (): Promise<void> => {
   const filepath = "test.txt";
   logBuffer.length = 0;
   logCount = 0;
@@ -34,9 +35,9 @@ Deno.test("appendAndForget() appends correctly", async (): Promise<void> => {
   appendText(filepath, "5\n");
 
   await delay(150);
-  assertEquals(logBuffer[0], "1\n");
-  assertEquals(logBuffer[1], "2\n3\n4\n5\n");
-  assertEquals(logCount, 2);
+  strictEqual(logBuffer[0], "1\n");
+  strictEqual(logBuffer[1], "2\n3\n4\n5\n");
+  strictEqual(logCount, 2);
 });
 
 function appendTextMoq(

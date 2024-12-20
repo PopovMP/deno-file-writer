@@ -1,6 +1,3 @@
-// Copyright 2024 Forex Software Ltd. All rights reserved. MIT license.
-// This module works in Deno and NodeJS.
-
 /**
  * This module exports two functions: `appendText` and `writeText`.
  *
@@ -31,6 +28,8 @@
  * // `log.txt` contains:
  * // bar
  * ```
+ *
+ * This module works in Deno and NodeJS.
  *
  * @module
  */

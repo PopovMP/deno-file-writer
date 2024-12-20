@@ -36,7 +36,3 @@ writeText("log.txt", "bar\n");
 // `log.txt` contains:
 // bar
 ```
-
-Copyright 2024 Forex Software Ltd.
-
-All rights reserved. MIT license.
